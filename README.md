@@ -220,7 +220,7 @@ Tests use only synthetic parcels and mocked HTTP:
 ```sh
 pip install -r requirements_test.txt
 pytest --cov
-node --test tests/
+node --test "tests/*.test.mjs"
 ```
 
 `scripts/build_trucks.mjs` builds `frontend/peek-trucks.js`, the carriers' trucks, from Peek's brand data.

@@ -32,4 +32,4 @@ jobs:
           node-version: 24
       - run: node --check custom_components/peek/frontend/peek-parcels-card.js
       - run: node --check custom_components/peek/frontend/peek-trucks.js
-      - run: node --test tests/
+      - run: node --test "tests/*.test.mjs"
