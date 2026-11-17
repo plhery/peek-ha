@@ -167,7 +167,7 @@ class PeekClient:
         session: aiohttp.ClientSession,
         url: str,
         token: Callable[[], Awaitable[str]],
-        version: str = "0.1.0",
+        version: str = "0.1.1",
     ) -> None:
         """Keep the session, Peek's address and where tokens come from."""
         self._session = session

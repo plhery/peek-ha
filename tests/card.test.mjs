@@ -1,4 +1,4 @@
-// Tests for the Peek parcels card, with Node's own runner and a stand-in for the browser: `node --test tests/`.
+// Tests for the Peek parcels card, with Node's own runner and a stand-in for the browser: `node --test "tests/*.test.mjs"`.
 
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
@@ -40,7 +40,11 @@ globalThis.CustomEvent = class {
 };
 const info = console.info;
 console.info = () => {};
-const { cardLines, dayWords, parcelLine } = await import('../custom_components/peek/frontend/peek-parcels-card.js');
+const { cardLines, cardParcels, cardStatus, dayWords, parcelLine, placeName } = await import(
+  '../custom_components/peek/frontend/peek-parcels-card.js'
+);
+const { pipExtents, pipMood, pipSvg } = await import('../custom_components/peek/frontend/peek-pip.js');
+const { carrierColors } = await import('../custom_components/peek/frontend/peek-trucks.js');
 console.info = info;
 const Card = registry.get('peek-parcels-card');
 
@@ -219,12 +223,124 @@ test('the card picker: a stub that finds the sensors, a form, and a preview', ()
   assert.equal(Card.getStubConfig(french).entity, 'sensor.peek_en_route');
 
   const form = Card.getConfigForm();
-  assert.deepEqual(form.schema.map((field) => field.name), ['entity', 'show_delivered', 'delivered_entity', 'max_rows', 'title']);
-  assert.equal(form.computeLabel({ name: 'max_rows' }), 'Rows at most');
+  assert.deepEqual(
+    form.schema.map((field) => field.name),
+    ['entity', 'style', 'show_delivered', 'delivered_entity', 'max_rows', 'title'],
+  );
+  assert.deepEqual(form.schema[1].selector.select.options, [{ value: 'list', label: 'List' }, { value: 'cards', label: 'Cards' }]);
+  assert.equal(form.computeLabel({ name: 'max_rows' }), 'Parcels at most');
   document.documentElement.lang = 'fr';
-  assert.equal(form.computeLabel({ name: 'max_rows' }), 'Lignes au plus');
+  assert.equal(form.computeLabel({ name: 'max_rows' }), 'Colis au plus');
   document.documentElement.lang = 'en';
 
   assert.deepEqual(window.customCards.map((card) => [card.type, card.preview]), [['peek-parcels-card', true]]);
   assert.throws(() => new Card().setConfig(null));
+  assert.throws(() => new Card().setConfig({ entity: 'sensor.peek_on_the_way', style: 'tiles' }), /list or cards/);
+});
+
+test("the cards' parcels: Peek's sections in order, then today's deliveries, and how many are left", () => {
+  const delivered = [parcel('e', 'USB-C dock', 'Swiss Post', 'delivered')];
+  const { shown, left } = cardParcels(PARCELS, 2, delivered, 4);
+  assert.deepEqual(shown.map(({ kind, parcel: item }) => `${kind}:${item.id}`), ['attention:b', 'today:a', 'active:c', 'active:d']);
+  assert.equal(left, 3);
+  assert.deepEqual(cardParcels(PARCELS, 0, delivered, 30).shown.at(-1).kind, 'delivered');
+  assert.deepEqual(cardParcels([], 0, null, 6), { shown: [], left: 0 });
+});
+
+test("a card's status: the stage in full, and its day unless it is out for delivery", () => {
+  assert.equal(cardStatus(PARCELS[0], TODAY, hass()), 'Out for delivery');
+  assert.equal(cardStatus(PARCELS[1], TODAY, hass()), `Ready for pickup · ${dayWords(day(2), TODAY, hass())}`);
+  assert.equal(cardStatus(PARCELS[2], TODAY, hass()), 'In transit · tomorrow');
+  assert.equal(cardStatus(PARCELS[3], TODAY, hass()), 'Added to tracking');
+  const french = hass({ language: 'fr', locale: { language: 'fr' } });
+  assert.equal(cardStatus(PARCELS[2], TODAY, french), 'En transit · demain');
+  const dock = parcel('e', 'USB-C dock', 'Swiss Post', 'delivered', undefined, { delivered_at: '2026-11-17T10:05:09+00:00' });
+  assert.equal(cardStatus(dock, '2026-11-17', french), 'Livré · 11:05');
+  assert.equal(cardStatus({ ...PARCELS[2], status: 'something_new' }, TODAY, hass()), 'Scanned at depot · tomorrow');
+});
+
+test("a place is the scan's town, out of capitals", () => {
+  assert.equal(placeName('ZURICH-MULLIGEN, CH'), 'Zurich-Mulligen');
+  assert.equal(placeName("L'ISLE D'ABEAU CEDEX, FR"), "L'Isle D'Abeau Cedex");
+  assert.equal(placeName('Buchs SG'), 'Buchs SG');
+  assert.equal(placeName('  , FR'), '');
+  assert.equal(placeName(null), '');
+});
+
+test('the cards: in the carriers’ colours, with Pip by the place, and the rest counted', () => {
+  const state = hass();
+  state.states['sensor.peek_on_the_way'].attributes.parcels = [
+    { ...PARCELS[0], location: 'BERN, CH' },
+    ...PARCELS.slice(1),
+  ];
+  const card = render({ entity: 'sensor.peek_on_the_way', style: 'cards', max_rows: 3, title: 'Parcels' }, state);
+  const html = card.shadowRoot.innerHTML;
+  assert.match(html, /<div class="cards" role="list">/);
+  assert.equal(html.match(/class="pc[ "]/g).length, 3);
+  assert.ok(html.indexOf('Ceramic bowls') < html.indexOf('Hiking boots'));
+  assert.match(html, /class="pc attention"/);
+  assert.match(html, /<span class="pc-carrier">UPS<\/span>/);
+  const ups = carrierColors('UPS');
+  assert.ok(html.includes(`--pc-surface:${ups.surface[0]};--pc-ink:${ups.ink[0]};--pc-brand:${ups.brand[0]}`));
+  // Out for delivery, Pip hurries toward the place; the parcels without one have him alone.
+  assert.match(html, /class="pk-pip pk-pip-eager"[^]*<span class="pc-chip">Bern<\/span>/);
+  assert.match(html, /aria-label="Hiking boots, UPS, Out for delivery, Bern"/);
+  assert.match(html, /\+1 more/);
+  assert.doesNotMatch(html, /Demo Books/);
+  // 30 + 25 for the title, two rows of cards at 158 and "+1 more" at 26: 397 px.
+  assert.equal(card.getCardSize(), 8);
+  assert.deepEqual(card.getGridOptions(), { columns: 12, min_columns: 6 });
+
+  const dark = render({ entity: 'sensor.peek_on_the_way', style: 'cards' }, hass({ themes: { darkMode: true } }));
+  const darkHtml = dark.shadowRoot.innerHTML;
+  assert.match(darkHtml, /class="root dark"/);
+  assert.ok(darkHtml.includes(`--pc-surface:${ups.surface[1]};--pc-ink:${ups.ink[1]}`));
+
+  const empty = hass();
+  empty.states['sensor.peek_on_the_way'] = { state: '0', attributes: { parcels: [] } };
+  assert.match(render({ entity: 'sensor.peek_on_the_way', style: 'cards' }, empty).shadowRoot.innerHTML, /Nothing on the way/);
+});
+
+test("the cards' names and places are text, never markup", () => {
+  const state = hass();
+  state.states['sensor.peek_on_the_way'] = {
+    state: '1',
+    attributes: {
+      parcels: [parcel('x', '<img src=x onerror=alert(1)>', '<b>Carrier</b>', 'in_transit', 'active', { location: '<i>x</i>' })],
+    },
+  };
+  const html = render({ entity: 'sensor.peek_on_the_way', style: 'cards' }, state).shadowRoot.innerHTML;
+  assert.doesNotMatch(html, /<img|<b>|<i>/);
+  assert.match(html, /&#60;img/);
+});
+
+test("carriers' card colours are Peek's, and a carrier Peek does not know gets its grey", () => {
+  // Peek's palette for FedEx (#4d148c) and An Post (#00a76a): src/brand, carrierBrand().
+  assert.deepEqual(carrierColors('FedEx'), {
+    surface: ['#e6deef', '#272131'], ink: ['#23093f', '#c1add7'], brand: ['#360e62', '#b8a1d1'],
+  });
+  assert.deepEqual(carrierColors(' an post ').surface, ['#dbf3ea', '#0f2b1e']);
+  assert.deepEqual(carrierColors('No such carrier'), carrierColors(undefined));
+});
+
+test("Pip's face follows the stage, and his frame what he covers", () => {
+  assert.deepEqual(
+    ['pending', 'in_transit', 'out_for_delivery', 'customs', 'ready_for_pickup', 'failed_attempt', 'delivered', undefined]
+      .map(pipMood),
+    ['look', 'look', 'eager', 'wait', 'wait', 'worry', 'joy', 'look'],
+  );
+  const look = pipSvg('look');
+  assert.match(look, /viewBox="52 92 196 204" width="44" height="45.8"/);
+  assert.equal(look.match(/<polygon/g).length, 2);
+  assert.match(look, /stroke-dasharray="3 3"/);
+  // Delivered, his four flaps are open and the tape is gone, with glints around.
+  const joy = pipSvg('joy');
+  assert.equal(joy.match(/<polygon/g).length, 4);
+  assert.doesNotMatch(joy, /stroke-dasharray/);
+  assert.equal(joy.match(/scale\(/g).length, 6);
+  // Eager, his speed lines trail away from the place.
+  assert.match(pipSvg('eager', 1), /M14 170H40/);
+  assert.doesNotMatch(pipSvg('eager', 1), /matrix\(-1/);
+  assert.match(pipSvg('eager', -1), /matrix\(-1 0 0 1 300 0\)/);
+  assert.deepEqual(pipExtents('eager', -1), [52, 76, 300, 296]);
 });

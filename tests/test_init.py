@@ -193,12 +193,12 @@ async def test_card_is_served(hass: HomeAssistant, hass_client: ClientSessionGen
     """The card's files are served under the integration's version, cached."""
     assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_client()
-    for name in ("peek-parcels-card.js", "peek-trucks.js"):
-        response = await client.get(f"/peek/static/0.1.0/{name}")
+    for name in ("peek-parcels-card.js", "peek-pip.js", "peek-trucks.js"):
+        response = await client.get(f"/peek/static/0.1.1/{name}")
         assert response.status == HTTPStatus.OK
         assert "javascript" in response.headers["Content-Type"]
         assert "max-age" in response.headers.get("Cache-Control", "")
-    assert (await client.get("/peek/static/0.1.0/missing.js")).status == HTTPStatus.NOT_FOUND
+    assert (await client.get("/peek/static/0.1.1/missing.js")).status == HTTPStatus.NOT_FOUND
 
 
 async def test_card_on_dashboards(hass: HomeAssistant) -> None:
@@ -206,7 +206,7 @@ async def test_card_on_dashboards(hass: HomeAssistant) -> None:
     hass.config.components.add("frontend")
     with patch("custom_components.peek.card.add_extra_js_url") as add:
         assert await async_setup_component(hass, DOMAIN, {})
-    add.assert_called_once_with(hass, "/peek/static/0.1.0/peek-parcels-card.js")
+    add.assert_called_once_with(hass, "/peek/static/0.1.1/peek-parcels-card.js")
 
 
 async def test_card_without_frontend(hass: HomeAssistant) -> None:

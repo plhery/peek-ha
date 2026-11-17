@@ -149,6 +149,19 @@ for (const [truck, surface, edge, expected] of brand.litEdgeExamples) {
 
 // ---- What the generated module runs: these functions are copied into it as written ----
 
+/** `color` mixed toward `base` by `amount`, as Peek's `mix` does with a colour it can read. */
+function blend(color, base, amount) {
+  return '#' + [1, 3, 5].map((offset) => Math.round(
+    parseInt(color.slice(offset, offset + 2), 16) * (1 - amount) + parseInt(base.slice(offset, offset + 2), 16) * amount,
+  ).toString(16).padStart(2, '0')).join('');
+}
+
+/** One of a card's colours from the carrier's truck colour, as Peek derives it: a step is `[base, amount, tone?]`. */
+function cardColor(truck, [base, amount, toned]) {
+  const mixed = blend(truck, base, amount);
+  return toned ? tone(mixed, toned) : mixed;
+}
+
 /** A carrier's outline when it declares none: its truck colour, a fifth darker. */
 function shade(hex) {
   return '#' + [1, 3, 5].map((at) => Math.round(parseInt(hex.slice(at, at + 2), 16) * 0.8).toString(16).padStart(2, '0')).join('');
@@ -241,9 +254,35 @@ function liveryNumber(code) {
   return liveryIndex.get(code);
 }
 
+// ---- The colours of a parcel's card, as Peek's widgets and list draw it ----
+
+const CARD_PROPERTIES = ['surface-light', 'surface-dark', 'ink-light', 'ink-dark', 'brand-light', 'brand-dark'];
+const CARD_STEPS = CARD_PROPERTIES.map((property) => {
+  const step = brand.derivation.find((item) => item.property === property);
+  if (!step) throw new Error(`palette.json derives no ${property}`);
+  return step.tone ? [step.base, step.amount, step.tone] : [step.base, step.amount];
+});
+let pinnedCards = 0;
+
 /**
- * A carrier as `truck,edge,edgeDark,accent,livery`, colours without `#`. An empty or missing field takes its default:
- * the edge is `shade(truck)`, the dark edge is the edge, the accent white, the livery `default` (number 0).
+ * The card's colours that the truck colour does not give through `CARD_STEPS`, because Peek pins them or derives
+ * them from another colour: six fields joined by `/`, in `CARD_PROPERTIES` order, empty where the truck gives it.
+ */
+function cardRecord(palette) {
+  const fields = CARD_PROPERTIES.map((property, index) => {
+    const value = palette[property];
+    if (!HEX.test(value)) throw new Error(`palette ${property} ${value} is not a #rrggbb colour`);
+    return value.toLowerCase() === cardColor(palette.truck, CARD_STEPS[index]) ? '' : value.slice(1).toLowerCase();
+  });
+  while (fields.at(-1) === '') fields.pop();
+  if (fields.length) pinnedCards += 1;
+  return fields.join('/');
+}
+
+/**
+ * A carrier as `truck,edge,edgeDark,accent,livery,card`, colours without `#`. An empty or missing field takes its
+ * default: the edge is `shade(truck)`, the dark edge is the edge, the accent white, the livery `default` (number 0),
+ * and the card's colours come from the truck colour (see `cardRecord`).
  */
 function carrierRecord(palette, livery) {
   const strip = (hex) => hex.slice(1).toLowerCase();
@@ -257,6 +296,7 @@ function carrierRecord(palette, livery) {
     edgeDark.toLowerCase() === palette.edge.toLowerCase() ? '' : strip(edgeDark),
     palette.accent.toLowerCase() === '#ffffff' ? '' : strip(palette.accent),
     livery === 0 ? '' : String(livery),
+    cardRecord(palette),
   ];
   while (fields.at(-1) === '') fields.pop();
   return fields.join(',');
@@ -293,19 +333,52 @@ ${shade}
 
 ${shapeMarkup}
 
+// A card's colours, derived from the truck colour as Peek derives them (src/brand).
+const channels = ${channels};
+const linear = ${linear};
+const encoded = ${encoded};
+
+${luminance}
+
+${oklch}
+
+${fromOklch}
+
+${tone}
+
+${blend}
+
+${cardColor}
+
+/** Peek's steps for a card's ${CARD_PROPERTIES.join(', ')}. */
+const CARD_STEPS = ${JSON.stringify(CARD_STEPS)};
+
 /** Livery 0 is Peek's \`default\`: a stripe and a dot in the accent. */
 const LIVERIES = ${JSON.stringify(liveries)};
 
 /** Peek's default carrier colour, for a name the catalog does not hold. */
 const DEFAULT = ${JSON.stringify(DEFAULT_RECORD)};
 
-/** By lower-case display name: "truck,edge,edgeDark,accent,livery" (see build_trucks.mjs). */
+/** By lower-case display name: "truck,edge,edgeDark,accent,livery,card" (see build_trucks.mjs). */
 const CARRIERS = ${JSON.stringify(carriers)};
+
+function record(carrier) {
+  const key = typeof carrier === 'string' ? carrier.trim().toLowerCase() : '';
+  return (Object.hasOwn(CARRIERS, key) ? CARRIERS[key] : DEFAULT).split(',');
+}
+
+/** The colours of a parcel's card in Peek, from its carrier: \`surface\`, \`ink\` and \`brand\`, each [light, dark]. */
+export function carrierColors(carrier) {
+  const fields = record(carrier);
+  const pinned = (fields[5] || '').split('/');
+  const [surfaceLight, surfaceDark, inkLight, inkDark, brandLight, brandDark] = CARD_STEPS
+    .map((step, index) => (pinned[index] ? '#' + pinned[index] : cardColor('#' + fields[0], step)));
+  return { surface: [surfaceLight, surfaceDark], ink: [inkLight, inkDark], brand: [brandLight, brandDark] };
+}
 
 /** The carrier's truck as SVG markup, from the display name Peek's API gives a parcel's \`carrier\`. */
 export function truckSvg(carrier) {
-  const key = typeof carrier === 'string' ? carrier.trim().toLowerCase() : '';
-  const [truck, edge, edgeDark, accent, livery] = (Object.hasOwn(CARRIERS, key) ? CARRIERS[key] : DEFAULT).split(',');
+  const [truck, edge, edgeDark, accent, livery] = record(carrier);
   const t = '#' + truck;
   const e = edge ? '#' + edge : shade(t);
   const paints = { t, e, a: accent ? '#' + accent : '#ffffff' };
@@ -317,4 +390,5 @@ export function truckSvg(carrier) {
 
 writeFileSync(outputPath, output);
 console.log(`Wrote ${path.relative(repoRoot, outputPath)}: ${(Buffer.byteLength(output) / 1024).toFixed(1)} KB, `
-  + `${Object.keys(carriers).length} carriers, ${drawn.size} in their own livery (${liveries.length} distinct liveries).`);
+  + `${Object.keys(carriers).length} carriers, ${drawn.size} in their own livery (${liveries.length} distinct liveries), `
+  + `${pinnedCards} with card colours of their own.`);

@@ -8,7 +8,7 @@
 - a **Deliveries** calendar;
 - a **Parcel updates** event each time a parcel is added, moves on, goes out for delivery, needs you or is delivered;
 - actions to add parcels from a text (an order email, say), archive one, or read the list;
-- a dashboard card that looks like Peek's Parcels widget;
+- a dashboard card that looks like Peek's Parcels widget, as a list or as cards with Pip;
 - a tool Assist can use to answer "what arrives today?".
 
 It needs Home Assistant 2026.10 or later.
@@ -181,13 +181,30 @@ The integration serves its card and loads it on every dashboard: there is no res
 ```yaml
 type: custom:peek-parcels-card
 entity: sensor.peek_on_the_way
+style: list
 show_delivered: true
 delivered_entity: sensor.peek_delivered_today
 max_rows: 6
 title: Parcels
 ```
 
-It shows the parcels under Peek's sections (needs attention, arriving today, on the way), each with its carrier's truck, its stage and its day, then "+N more" past `max_rows`. It follows your theme, light or dark, and your language (English or French). Selecting it opens the "On the way" sensor. Set `--peek-attention-color` in a theme to change the colour of parcels that need you.
+It comes in two styles, both in the order of Peek's sections (needs attention, arriving today, on the way, then today's deliveries with `show_delivered`) and both ending with "+N more" past `max_rows`:
+
+- `list`, the default: a row for each parcel, with its carrier's truck, its stage and its day.
+- `cards`: a card for each parcel in its carrier's colours, like Peek's iPhone and Android widgets, with the carrier, Pip as the parcel's stage has him, the town of the latest scan, the parcel's name, and its stage and day. Cards take a section's full width.
+
+<p>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="images/list-dark.png">
+    <img src="images/list-light.png" alt="The list style: parcels under Needs attention, Arriving today and On the way, each with its carrier's truck, its stage and its day" width="420">
+  </picture>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="images/cards-dark.png">
+    <img src="images/cards-light.png" alt="The cards style: a card for each parcel in its carrier's colours, with Pip, the town of the latest scan, the parcel's name, its stage and its day" width="420">
+  </picture>
+</p>
+
+The card follows your theme, light or dark, and your language (English or French). Selecting it opens the "On the way" sensor. Set `--peek-attention-color` in a theme to change the colour of parcels that need you.
 
 ## Assist
 
