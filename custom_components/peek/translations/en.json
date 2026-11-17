@@ -1,0 +1,189 @@
+{
+  "config": {
+    "step": {
+      "pick_implementation": {
+        "title": "Pick how to sign in"
+      },
+      "reauth_confirm": {
+        "title": "Sign in to Peek again",
+        "description": "Peek needs you to sign in again: the connection expired or was removed, or it may no longer see or add parcels."
+      }
+    },
+    "abort": {
+      "reauth_successful": "You’re signed in to Peek again."
+    },
+    "create_entry": {
+      "default": "You’re signed in to Peek."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "on_the_way": {
+        "name": "On the way",
+        "unit_of_measurement": "parcels"
+      },
+      "arriving_today": {
+        "name": "Arriving today",
+        "unit_of_measurement": "parcels"
+      },
+      "needs_attention": {
+        "name": "Needs attention",
+        "unit_of_measurement": "parcels"
+      },
+      "delivered_today": {
+        "name": "Delivered today",
+        "unit_of_measurement": "parcels"
+      },
+      "next_delivery": {
+        "name": "Next delivery"
+      }
+    },
+    "calendar": {
+      "deliveries": {
+        "name": "Deliveries"
+      }
+    },
+    "event": {
+      "parcel_updates": {
+        "name": "Parcel updates",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "added": "Added",
+              "status_changed": "Moved on",
+              "out_for_delivery": "Out for delivery",
+              "delivered": "Delivered",
+              "needs_attention": "Needs attention",
+              "expected_delivery_changed": "New expected day"
+            }
+          },
+          "status": {
+            "state": {
+              "pending": "Added to tracking",
+              "registered": "Label created",
+              "accepted": "Received by carrier",
+              "in_transit": "In transit",
+              "customs": "At customs",
+              "exception": "Needs attention",
+              "out_for_delivery": "Out for delivery",
+              "failed_attempt": "Delivery attempted",
+              "ready_for_pickup": "Ready for pickup",
+              "delivered": "Delivered",
+              "returned": "Returned to sender"
+            }
+          },
+          "needs_attention": {
+            "state": {
+              "customs": "Customs clearance",
+              "customs_documents": "Customs needs documents from you",
+              "customs_duties": "Import duties or taxes to pay",
+              "customs_tax_id": "Customs needs your tax number",
+              "exception": "The carrier reported a problem",
+              "failed_attempt": "Check the carrier’s next steps",
+              "generated": "These updates look generated",
+              "not_announced": "Still waiting for the carrier’s first update",
+              "ready_for_pickup": "Ready for pickup",
+              "stalled": "No tracking update for four days",
+              "sync_error": "Couldn’t get the latest update"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "Peek isn’t set up, or isn’t loaded."
+    },
+    "auth_failed": {
+      "message": "Peek refused the sign-in. Sign in to Peek again."
+    },
+    "missing_scope": {
+      "message": "This connection may not do this. Sign in to Peek again and allow it to see and add parcels."
+    },
+    "rate_limited": {
+      "message": "Too many requests to Peek. Try again in a minute."
+    },
+    "update_failed": {
+      "message": "Couldn’t read the parcels from Peek: {error}"
+    },
+    "request_failed": {
+      "message": "Peek couldn’t do this: {error}"
+    },
+    "parcel_not_found": {
+      "message": "Peek has no parcel {parcel}."
+    },
+    "url_changed": {
+      "message": "Peek’s address is now {url}. Sign in to Peek there."
+    }
+  },
+  "services": {
+    "add_parcels": {
+      "name": "Add parcels",
+      "description": "Finds the tracking numbers in a text, such as the shipping part of an order email, and adds each to Peek. A number Peek already follows is left as it is.",
+      "fields": {
+        "text": {
+          "name": "Text",
+          "description": "Text holding one or more tracking numbers. Send only the shipping part: Peek keeps the numbers and the name, nothing else."
+        },
+        "name": {
+          "name": "Name",
+          "description": "What to call the parcel, usually the shop it comes from."
+        }
+      }
+    },
+    "archive_parcel": {
+      "name": "Archive a parcel",
+      "description": "Moves a parcel to the archive, out of the list of deliveries. You can restore it in Peek.",
+      "fields": {
+        "parcel": {
+          "name": "Parcel",
+          "description": "The parcel’s id or tracking number."
+        }
+      }
+    },
+    "get_parcels": {
+      "name": "Get parcels",
+      "description": "Reads the parcels that match from Peek.",
+      "fields": {
+        "status": {
+          "name": "Status",
+          "description": "Which parcels; on the way unless given."
+        },
+        "sort": {
+          "name": "Order",
+          "description": "The order; each status has its own unless given."
+        },
+        "search": {
+          "name": "Search",
+          "description": "Words in the parcel’s name, shop, carrier, tracking number or scans."
+        },
+        "limit": {
+          "name": "Limit",
+          "description": "How many at most; 20 unless given."
+        }
+      }
+    }
+  },
+  "selector": {
+    "status": {
+      "options": {
+        "active": "On the way",
+        "attention": "Needs attention",
+        "today": "Arriving today",
+        "week": "Arriving this week",
+        "delivered": "Delivered",
+        "archived": "Archived",
+        "all": "All"
+      }
+    },
+    "sort": {
+      "options": {
+        "expected": "Expected day, soonest first",
+        "delivered": "Delivery, latest first",
+        "updated": "Latest update first",
+        "added": "Latest added first"
+      }
+    }
+  }
+}

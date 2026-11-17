@@ -1,0 +1,54 @@
+add_parcels:
+  fields:
+    text:
+      required: true
+      example: "Your order is on its way with UPS. Tracking number: 1Z4E7W960398127345"
+      selector:
+        text:
+          multiline: true
+    name:
+      example: "Fjord Outdoor"
+      selector:
+        text:
+
+archive_parcel:
+  fields:
+    parcel:
+      required: true
+      example: "1Z4E7W960398127345"
+      selector:
+        text:
+
+get_parcels:
+  fields:
+    status:
+      selector:
+        select:
+          translation_key: status
+          options:
+            - active
+            - attention
+            - today
+            - week
+            - delivered
+            - archived
+            - all
+    sort:
+      selector:
+        select:
+          translation_key: sort
+          options:
+            - expected
+            - delivered
+            - updated
+            - added
+    search:
+      example: "Fjord Outdoor"
+      selector:
+        text:
+    limit:
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box

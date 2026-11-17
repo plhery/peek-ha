@@ -1,0 +1,42 @@
+{
+  "entity": {
+    "sensor": {
+      "on_the_way": {
+        "default": "mdi:truck-delivery"
+      },
+      "arriving_today": {
+        "default": "mdi:package-variant-closed"
+      },
+      "needs_attention": {
+        "default": "mdi:package-variant-closed-remove"
+      },
+      "delivered_today": {
+        "default": "mdi:package-variant-closed-check"
+      },
+      "next_delivery": {
+        "default": "mdi:calendar-arrow-right"
+      }
+    },
+    "calendar": {
+      "deliveries": {
+        "default": "mdi:calendar-month"
+      }
+    },
+    "event": {
+      "parcel_updates": {
+        "default": "mdi:truck-fast"
+      }
+    }
+  },
+  "services": {
+    "add_parcels": {
+      "service": "mdi:package-variant-plus"
+    },
+    "archive_parcel": {
+      "service": "mdi:archive-arrow-down"
+    },
+    "get_parcels": {
+      "service": "mdi:format-list-bulleted"
+    }
+  }
+}

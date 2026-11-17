@@ -1,0 +1,189 @@
+{
+  "config": {
+    "step": {
+      "pick_implementation": {
+        "title": "Choisis comment te connecter"
+      },
+      "reauth_confirm": {
+        "title": "Reconnecte-toi à Peek",
+        "description": "Peek te demande de te reconnecter : la connexion a expiré ou a été supprimée, ou elle ne peut plus voir ou ajouter de colis."
+      }
+    },
+    "abort": {
+      "reauth_successful": "Tu es de nouveau connecté à Peek."
+    },
+    "create_entry": {
+      "default": "Tu es connecté à Peek."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "on_the_way": {
+        "name": "En route",
+        "unit_of_measurement": "colis"
+      },
+      "arriving_today": {
+        "name": "Livraison prévue aujourd’hui",
+        "unit_of_measurement": "colis"
+      },
+      "needs_attention": {
+        "name": "À vérifier",
+        "unit_of_measurement": "colis"
+      },
+      "delivered_today": {
+        "name": "Livrés aujourd’hui",
+        "unit_of_measurement": "colis"
+      },
+      "next_delivery": {
+        "name": "Prochaine livraison"
+      }
+    },
+    "calendar": {
+      "deliveries": {
+        "name": "Livraisons"
+      }
+    },
+    "event": {
+      "parcel_updates": {
+        "name": "Mises à jour des colis",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "added": "Ajouté",
+              "status_changed": "Avancé",
+              "out_for_delivery": "En livraison",
+              "delivered": "Livré",
+              "needs_attention": "À vérifier",
+              "expected_delivery_changed": "Nouveau jour prévu"
+            }
+          },
+          "status": {
+            "state": {
+              "pending": "Ajouté au suivi",
+              "registered": "Étiquette créée",
+              "accepted": "Pris en charge",
+              "in_transit": "En transit",
+              "customs": "À la douane",
+              "exception": "Problème signalé",
+              "out_for_delivery": "En livraison",
+              "failed_attempt": "Tentative de livraison",
+              "ready_for_pickup": "Prêt à être retiré",
+              "delivered": "Livré",
+              "returned": "Retourné à l’expéditeur"
+            }
+          },
+          "needs_attention": {
+            "state": {
+              "customs": "Dédouanement",
+              "customs_documents": "La douane te demande des documents",
+              "customs_duties": "Droits de douane ou taxes à payer",
+              "customs_tax_id": "La douane a besoin de ton numéro fiscal",
+              "exception": "Le transporteur signale un problème",
+              "failed_attempt": "Consulte les instructions du transporteur",
+              "generated": "Ces mises à jour semblent générées",
+              "not_announced": "En attente de la première mise à jour du transporteur",
+              "ready_for_pickup": "Prêt à être retiré",
+              "stalled": "Aucune mise à jour depuis quatre jours",
+              "sync_error": "Dernière mise à jour indisponible"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "Peek n’est pas configuré ou pas chargé."
+    },
+    "auth_failed": {
+      "message": "Peek a refusé la connexion. Reconnecte-toi à Peek."
+    },
+    "missing_scope": {
+      "message": "Cette connexion n’y est pas autorisée. Reconnecte-toi à Peek et autorise-la à voir et ajouter des colis."
+    },
+    "rate_limited": {
+      "message": "Trop de requêtes vers Peek. Réessaie dans une minute."
+    },
+    "update_failed": {
+      "message": "Impossible de lire les colis depuis Peek : {error}"
+    },
+    "request_failed": {
+      "message": "Peek n’a pas pu le faire : {error}"
+    },
+    "parcel_not_found": {
+      "message": "Peek n’a aucun colis {parcel}."
+    },
+    "url_changed": {
+      "message": "L’adresse de Peek est maintenant {url}. Connecte-toi à Peek à cette adresse."
+    }
+  },
+  "services": {
+    "add_parcels": {
+      "name": "Ajouter des colis",
+      "description": "Trouve les numéros de suivi dans un texte, comme la partie expédition d’un e-mail de commande, et ajoute chacun à Peek. Un numéro que Peek suit déjà reste tel quel.",
+      "fields": {
+        "text": {
+          "name": "Texte",
+          "description": "Texte contenant un ou plusieurs numéros de suivi. N’envoie que la partie expédition : Peek garde les numéros et le nom, rien d’autre."
+        },
+        "name": {
+          "name": "Nom",
+          "description": "Comment appeler le colis, souvent la boutique d’où il vient."
+        }
+      }
+    },
+    "archive_parcel": {
+      "name": "Archiver un colis",
+      "description": "Déplace un colis dans les archives, hors de la liste des livraisons. Tu peux le restaurer dans Peek.",
+      "fields": {
+        "parcel": {
+          "name": "Colis",
+          "description": "L’identifiant ou le numéro de suivi du colis."
+        }
+      }
+    },
+    "get_parcels": {
+      "name": "Obtenir les colis",
+      "description": "Lit depuis Peek les colis correspondants.",
+      "fields": {
+        "status": {
+          "name": "Statut",
+          "description": "Quels colis ; ceux en route si rien n’est choisi."
+        },
+        "sort": {
+          "name": "Ordre",
+          "description": "L’ordre ; chaque statut a le sien si rien n’est choisi."
+        },
+        "search": {
+          "name": "Recherche",
+          "description": "Des mots du nom du colis, de la boutique, du transporteur, du numéro de suivi ou des étapes."
+        },
+        "limit": {
+          "name": "Limite",
+          "description": "Combien au plus ; 20 si rien n’est indiqué."
+        }
+      }
+    }
+  },
+  "selector": {
+    "status": {
+      "options": {
+        "active": "En route",
+        "attention": "À vérifier",
+        "today": "Livraison prévue aujourd’hui",
+        "week": "Livraison prévue cette semaine",
+        "delivered": "Livrés",
+        "archived": "Archivés",
+        "all": "Tous"
+      }
+    },
+    "sort": {
+      "options": {
+        "expected": "Jour prévu, le plus proche d’abord",
+        "delivered": "Livraison, la plus récente d’abord",
+        "updated": "Dernière mise à jour d’abord",
+        "added": "Dernier ajouté d’abord"
+      }
+    }
+  }
+}
