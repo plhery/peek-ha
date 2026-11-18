@@ -13,7 +13,7 @@
       "reauth_successful": "Tu es de nouveau connecté à Peek."
     },
     "create_entry": {
-      "default": "Tu es connecté à Peek."
+      "default": "Tu es connecté à Peek.\n\nPour ajouter la carte Peek parcels à un tableau de bord, recharge d’abord cette page (dans l’app Home Assistant, ferme-la et rouvre-la) : la carte se charge à l’ouverture d’une page. Modifie ensuite le tableau de bord, choisis **Ajouter une carte**, ouvre **Par carte** et cherche « Peek »."
     }
   },
   "entity": {

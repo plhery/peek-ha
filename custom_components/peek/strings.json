@@ -13,7 +13,7 @@
       "reauth_successful": "You’re signed in to Peek again."
     },
     "create_entry": {
-      "default": "You’re signed in to Peek."
+      "default": "You’re signed in to Peek.\n\nTo add the Peek parcels card to a dashboard, first reload this page (in the Home Assistant app, close it and open it again): the card loads when a page opens. Then edit the dashboard, select **Add card**, open **By card** and search for “Peek”."
     }
   },
   "entity": {

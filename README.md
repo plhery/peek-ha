@@ -15,9 +15,9 @@ It needs Home Assistant 2026.10 or later.
 
 ## Install
 
-**From the Marketplace** (Home Assistant 2026.11 and later): open **Settings › Marketplace**, search for **Peek**, download it and restart Home Assistant.
+**From the Marketplace** (Home Assistant 2026.11 and later). Peek isn't in the Marketplace's catalog yet, so add it by its link: open **Settings › Marketplace**, choose **Add from link**, enter `https://github.com/plhery/peek-ha` and select **Add**. The first time, the Marketplace asks you to connect GitHub. Then download Peek and select **Set up**. Once Peek is in the catalog, searching for "Peek" in the Marketplace finds it, with no link.
 
-**As a custom repository**, before Peek is in the catalog: in the Marketplace, add `https://github.com/plhery/peek-ha` as a custom repository of the **Integration** type, then download it and restart. Adding a custom repository needs the Marketplace's GitHub connection. On Home Assistant 2026.10, do the same in HACS.
+**With HACS** (Home Assistant 2026.10): add `https://github.com/plhery/peek-ha` as a custom repository of the **Integration** type, download Peek and restart Home Assistant.
 
 **By hand**: copy `custom_components/peek` into your configuration's `custom_components` folder and restart.
 
@@ -176,7 +176,13 @@ actions:
 
 ## The card
 
-The integration serves its card and loads it on every dashboard: there is no resource to add. In a dashboard, add a card and pick **Peek parcels**, or write it in YAML:
+The integration serves its card and loads it on every dashboard: there is no resource to add and nothing else to download. Home Assistant loads the card when a page opens, so a page that was already open when you set Peek up doesn't have it yet: reload the page, or in the Home Assistant app, close the app and open it again. Then:
+
+1. Open a dashboard and select the pencil to edit it. On a dashboard Home Assistant made for you, it first asks you to take control.
+2. Select **Add card**, then the **By card** tab (the **By entity** tab searches entities, not cards).
+3. Search for "Peek", pick **Peek parcels** and save.
+
+Or write it in YAML:
 
 ```yaml
 type: custom:peek-parcels-card

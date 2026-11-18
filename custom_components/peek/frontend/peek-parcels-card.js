@@ -6,7 +6,7 @@
 import { PIP_CSS, pipMood, pipSvg } from './peek-pip.js';
 import { TRUCK_CSS, carrierColors, truckSvg } from './peek-trucks.js';
 
-const VERSION = '0.1.1';
+const VERSION = '0.1.2';
 const STYLES = ['list', 'cards'];
 const SECTIONS = ['attention', 'today', 'active'];
 const DEFAULT_ROWS = 6;
