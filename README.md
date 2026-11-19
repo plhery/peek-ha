@@ -29,7 +29,7 @@ It needs Home Assistant 2026.10 or later.
 
 There is nothing to type in Home Assistant: no client id, no secret, no Application Credentials. One Peek account can be connected to each Home Assistant. When Peek refuses the connection (because you disconnected Home Assistant in Peek, for example), **Settings › Devices & services** says "Authentication expired for Peek"; reconfiguring it starts the same sign-in.
 
-Peek's connections for assistants are experimental. If Peek says it can't connect assistants to your account, the integration can't be set up yet.
+Peek's connections for assistants are in beta. If Peek says it can't connect assistants to your account, the integration can't be set up yet.
 
 ## Entities
 
