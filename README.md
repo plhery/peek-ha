@@ -8,7 +8,7 @@
 
 Sensors, a calendar, an event for each change and a card, from your [Peek](https://peektracker.com) list.
 
-[![HACS](https://img.shields.io/badge/HACS-custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories)
+[![HACS](https://img.shields.io/badge/HACS-default-41BDF5.svg)](https://hacs.xyz)
 [![Release](https://img.shields.io/github/v/release/plhery/peek-ha)](https://github.com/plhery/peek-ha/releases)
 [![Hassfest](https://github.com/plhery/peek-ha/actions/workflows/hassfest.yml/badge.svg)](https://github.com/plhery/peek-ha/actions/workflows/hassfest.yml)
 [![Tests](https://github.com/plhery/peek-ha/actions/workflows/tests.yml/badge.svg)](https://github.com/plhery/peek-ha/actions/workflows/tests.yml)
@@ -37,13 +37,12 @@ It needs Home Assistant 2026.10 or later and a Peek account.
 
 [![Open Peek in your Home Assistant's Marketplace or HACS](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=plhery&repository=peek-ha&category=integration)
 
-The button opens Peek in the Marketplace (Home Assistant 2026.11 and later) or in HACS. Download it, then restart Home Assistant if HACS asks you to.
+Search for **Peek** in **Settings › Marketplace** (Home Assistant 2026.11 and later) or in HACS, and install it. Restart Home Assistant if HACS asks you to. The button opens Peek there directly.
 
 <details>
-<summary>Without the button</summary>
+<summary>If Peek isn't listed</summary>
 
-- **Marketplace** (2026.11 and later): **Settings › Marketplace › Add from link**, enter `https://github.com/plhery/peek-ha`. The first time, it asks you to connect GitHub.
-- **HACS**: add `https://github.com/plhery/peek-ha` as a custom repository of the **Integration** type, download Peek and restart.
+- **By its link**: **Settings › Marketplace › Add from link** with `https://github.com/plhery/peek-ha` (the first time, it asks you to connect GitHub), or in HACS, a custom repository of the **Integration** type.
 - **By hand**: copy `custom_components/peek` into your configuration's `custom_components` folder and restart.
 
 </details>
