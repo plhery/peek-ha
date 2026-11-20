@@ -6,7 +6,7 @@
       },
       "reauth_confirm": {
         "title": "Sign in to Peek again",
-        "description": "Peek needs you to sign in again: the connection expired or was removed, or it may no longer see or add parcels."
+        "description": "Peek needs you to sign in again: the connection expired or was removed, or it isn’t allowed to see, add or edit parcels yet."
       }
     },
     "abort": {
@@ -101,6 +101,9 @@
     "missing_scope": {
       "message": "This connection may not do this. Sign in to Peek again and allow it to see and add parcels."
     },
+    "missing_edit_scope": {
+      "message": "Home Assistant may not edit your parcels in Peek yet. Sign in to Peek again once to allow it: select Reconfigure next to Peek in Settings › Devices & services."
+    },
     "rate_limited": {
       "message": "Too many requests to Peek. Try again in a minute."
     },
@@ -112,6 +115,12 @@
     },
     "parcel_not_found": {
       "message": "Peek has no parcel {parcel}."
+    },
+    "carrier_not_found": {
+      "message": "Peek has no carrier with the id {carrier}."
+    },
+    "refused": {
+      "message": "Peek refused this: {error}"
     },
     "url_changed": {
       "message": "Peek’s address is now {url}. Sign in to Peek there."
@@ -134,11 +143,67 @@
     },
     "archive_parcel": {
       "name": "Archive a parcel",
-      "description": "Moves a parcel to the archive, out of the list of deliveries. You can restore it in Peek.",
+      "description": "Moves a parcel to the archive, out of the list of deliveries. You can restore it with Restore a parcel, or in Peek.",
       "fields": {
         "parcel": {
           "name": "Parcel",
           "description": "The parcel’s id or tracking number."
+        }
+      }
+    },
+    "restore_parcel": {
+      "name": "Restore a parcel",
+      "description": "Brings an archived parcel back to the list of deliveries.",
+      "fields": {
+        "parcel": {
+          "name": "Parcel",
+          "description": "The parcel’s id or tracking number."
+        }
+      }
+    },
+    "rename_parcel": {
+      "name": "Rename a parcel",
+      "description": "Gives a parcel the name Peek lists it by, such as what it holds or the shop it comes from.",
+      "fields": {
+        "parcel": {
+          "name": "Parcel",
+          "description": "The parcel’s id or tracking number."
+        },
+        "name": {
+          "name": "Name",
+          "description": "The new name, at most 80 characters. Empty clears it."
+        }
+      }
+    },
+    "change_carrier": {
+      "name": "Change a parcel’s carrier",
+      "description": "Sets the carrier that delivers a parcel, when Peek has the wrong one, and checks the parcel with it at once.",
+      "fields": {
+        "parcel": {
+          "name": "Parcel",
+          "description": "The parcel’s id or tracking number."
+        },
+        "carrier": {
+          "name": "Carrier",
+          "description": "Peek’s id for the carrier, such as dhl, ups, la-poste or dpd-de."
+        },
+        "postcode": {
+          "name": "Postcode",
+          "description": "The delivery postcode, for a carrier that asks for it. Without one, the parcel keeps the postcode it has; empty removes it."
+        }
+      }
+    },
+    "set_parcel_notifications": {
+      "name": "Turn a parcel’s notifications on or off",
+      "description": "Stops or resumes Peek’s notifications about a parcel. Peek’s emails about it stay as they are.",
+      "fields": {
+        "parcel": {
+          "name": "Parcel",
+          "description": "The parcel’s id or tracking number."
+        },
+        "notifications": {
+          "name": "Notifications",
+          "description": "On for Peek’s notifications about this parcel, off for none."
         }
       }
     },

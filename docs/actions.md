@@ -29,7 +29,7 @@ Send only the shipping part when you can: Peek keeps the tracking numbers and th
 
 ## `peek.archive_parcel`
 
-Moves a parcel to the archive. You can restore it in Peek.
+Moves a parcel to the archive. `peek.restore_parcel` brings it back.
 
 | Field | |
 | --- | --- |
@@ -39,6 +39,72 @@ Moves a parcel to the archive. You can restore it in Peek.
 action: peek.archive_parcel
 data:
   parcel: 1Z4E7W960398127345
+```
+
+## Editing a parcel
+
+The four actions below need Home Assistant to be allowed to edit your parcels. A Peek connected before version 0.2.0 may only see, add and archive them: the first edit then fails with "Home Assistant may not edit your parcels in Peek yet" and asks you to sign in to Peek again, once (**Reconfigure** next to Peek in **Settings › Devices & services**). Everything else keeps working meanwhile.
+
+Each one names the parcel by its `id` or its tracking number, and reads Peek again once the change is made. They return nothing.
+
+### `peek.restore_parcel`
+
+Brings an archived parcel back to the list of deliveries. `peek.get_parcels` with `status: archived` lists them.
+
+```yaml
+action: peek.restore_parcel
+data:
+  parcel: "46523910834"
+```
+
+### `peek.rename_parcel`
+
+Gives a parcel the name Peek lists it by.
+
+| Field | |
+| --- | --- |
+| `parcel` | Required. |
+| `name` | Required. At most 80 characters; `""` clears the name. |
+
+```yaml
+action: peek.rename_parcel
+data:
+  parcel: 1Z4E7W960398127345
+  name: Hiking boots
+```
+
+### `peek.change_carrier`
+
+Sets the carrier that delivers a parcel, when Peek has the wrong one. Peek checks the parcel with it at once.
+
+| Field | |
+| --- | --- |
+| `parcel` | Required. |
+| `carrier` | Required. Peek's id for the carrier, such as `dhl`, `ups`, `la-poste` (La Poste / Colissimo) or `dpd-de` (DPD Germany). [Peek's carrier catalog](https://peektracker.com/api/carriers) lists every id with its `displayName`. |
+| `postcode` | Optional. The delivery postcode, for a carrier that asks for it. Without it, the parcel keeps the postcode it has; `""` removes it. |
+
+```yaml
+action: peek.change_carrier
+data:
+  parcel: "01505024382917"
+  carrier: dpd-de
+  postcode: "10115"
+```
+
+### `peek.set_parcel_notifications`
+
+Turns Peek's notifications about one parcel off or back on, for when an automation tells you instead. Peek's emails about it stay as they are.
+
+| Field | |
+| --- | --- |
+| `parcel` | Required. |
+| `notifications` | Required. `true` for Peek's notifications about this parcel, `false` for none. |
+
+```yaml
+action: peek.set_parcel_notifications
+data:
+  parcel: 1Z4E7W960398127345
+  notifications: false
 ```
 
 ## `peek.get_parcels`

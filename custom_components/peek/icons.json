@@ -35,6 +35,18 @@
     "archive_parcel": {
       "service": "mdi:archive-arrow-down"
     },
+    "restore_parcel": {
+      "service": "mdi:archive-arrow-up"
+    },
+    "rename_parcel": {
+      "service": "mdi:rename-box"
+    },
+    "change_carrier": {
+      "service": "mdi:truck-check"
+    },
+    "set_parcel_notifications": {
+      "service": "mdi:bell-cog"
+    },
     "get_parcels": {
       "service": "mdi:format-list-bulleted"
     }

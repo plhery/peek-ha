@@ -47,7 +47,7 @@ DATA_CONFIG: HassKey[PeekConfig] = HassKey(f"{DOMAIN}_config")
 
 
 class PeekImplementation(config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce):
-    """Peek's authorization server, asked for both scopes, answering through My Home Assistant."""
+    """Peek's authorization server, asked for every scope, answering through My Home Assistant."""
 
     def __init__(self, hass: HomeAssistant, config: PeekConfig) -> None:
         """Point the implementation at Peek."""
@@ -78,7 +78,7 @@ class PeekImplementation(config_entry_oauth2_flow.LocalOAuth2ImplementationWithP
     @property
     @override
     def extra_authorize_data(self) -> dict[str, Any]:
-        """Ask for both scopes, with PKCE's challenge."""
+        """Ask for every scope, with PKCE's challenge."""
         return {"scope": SCOPES, **super().extra_authorize_data}
 
 

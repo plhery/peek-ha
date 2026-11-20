@@ -1,7 +1,9 @@
 """A small client for Peek's API, with nothing from Home Assistant in it.
 
-Reading goes through `GET /api/parcels`; adding and archiving go through Peek's MCP server (`POST /mcp`), whose
-`add_parcels` and `archive_parcel` tools are the only way to write. Each call takes a fresh access token from `token`.
+Reading goes through `GET /api/parcels`; every change goes through Peek's MCP server (`POST /mcp`), whose tools are the
+only way to write: `add_parcels` and `archive_parcel` under the `parcels:write` scope, and `rename_parcel`,
+`change_carrier`, `set_parcel_notifications` and `restore_parcel` under `parcels:edit`. Each call takes a fresh access
+token from `token`.
 """
 
 from collections.abc import Awaitable, Callable
@@ -167,7 +169,7 @@ class PeekClient:
         session: aiohttp.ClientSession,
         url: str,
         token: Callable[[], Awaitable[str]],
-        version: str = "0.1.2",
+        version: str = "0.2.0",
     ) -> None:
         """Keep the session, Peek's address and where tokens come from."""
         self._session = session
@@ -239,7 +241,33 @@ class PeekClient:
 
     async def archive_parcel(self, parcel: str) -> str:
         """Archive a parcel, named by its id or tracking number; its id."""
-        result = await self._call_tool("archive_parcel", {"parcel": parcel})
+        return await self._change("archive_parcel", parcel)
+
+    async def restore_parcel(self, parcel: str) -> str:
+        """Bring an archived parcel back to the list of deliveries; its id."""
+        return await self._change("restore_parcel", parcel)
+
+    async def rename_parcel(self, parcel: str, name: str) -> str:
+        """Give a parcel the name Peek lists it by, or clear it with ""; its id."""
+        return await self._change("rename_parcel", parcel, name=name)
+
+    async def change_carrier(self, parcel: str, carrier: str, postcode: str | None = None) -> str:
+        """Set the carrier that delivers a parcel, by Peek's id for it; its id.
+
+        A carrier that asks for the delivery postcode takes it here; without one, the parcel keeps the postcode it has,
+        and "" removes it.
+        """
+        if postcode is None:
+            return await self._change("change_carrier", parcel, carrier=carrier)
+        return await self._change("change_carrier", parcel, carrier=carrier, postcode=postcode)
+
+    async def set_parcel_notifications(self, parcel: str, notifications: bool) -> str:
+        """Turn Peek's notifications about a parcel on or off; its id."""
+        return await self._change("set_parcel_notifications", parcel, notifications=notifications)
+
+    async def _change(self, tool: str, parcel: str, **arguments: Any) -> str:
+        """Call a tool that changes one parcel, named by its id or tracking number; the parcel's id."""
+        result = await self._call_tool(tool, {"parcel": parcel, **arguments})
         return str(result.get("id", parcel))
 
     async def _call_tool(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:

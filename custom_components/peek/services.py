@@ -1,6 +1,6 @@
-"""Peek's actions: add parcels from a text, archive one, and list them."""
+"""Peek's actions: add parcels from a text, archive, restore and edit one, and list them."""
 
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 import probatio
@@ -17,6 +17,7 @@ from homeassistant.helpers import config_validation as cv
 
 from .api import (
     PeekAuthError,
+    PeekClient,
     PeekError,
     PeekRateLimitError,
     PeekScopeError,
@@ -28,11 +29,18 @@ from .model import summary
 
 SERVICE_ADD_PARCELS = "add_parcels"
 SERVICE_ARCHIVE_PARCEL = "archive_parcel"
+SERVICE_RESTORE_PARCEL = "restore_parcel"
+SERVICE_RENAME_PARCEL = "rename_parcel"
+SERVICE_CHANGE_CARRIER = "change_carrier"
+SERVICE_SET_PARCEL_NOTIFICATIONS = "set_parcel_notifications"
 SERVICE_GET_PARCELS = "get_parcels"
 
 ATTR_TEXT = "text"
 ATTR_NAME = "name"
 ATTR_PARCEL = "parcel"
+ATTR_CARRIER = "carrier"
+ATTR_POSTCODE = "postcode"
+ATTR_NOTIFICATIONS = "notifications"
 ATTR_STATUS = "status"
 ATTR_SORT = "sort"
 ATTR_SEARCH = "search"
@@ -43,8 +51,16 @@ STATUSES = ["active", "attention", "today", "week", "delivered", "archived", "al
 SORTS = ["expected", "delivered", "updated", "added"]
 MOST_TEXT = 16_000
 MOST_NAME = 80
+MOST_PARCEL = 100
+MOST_CARRIER = 60
+MOST_POSTCODE = 20
 MOST_SEARCH = 100
 MOST_LISTED = 50
+
+# The start of Peek's words for the refusals the integration says in the user's language; any other comes in Peek's
+# words.
+NO_PARCEL = "No such parcel"
+NO_CARRIER = "Peek has no carrier with this id"
 
 ADD_PARCELS_SCHEMA = probatio.Schema(
     {
@@ -52,8 +68,28 @@ ADD_PARCELS_SCHEMA = probatio.Schema(
         probatio.Optional(ATTR_NAME): probatio.All(cv.string, probatio.Length(max=MOST_NAME)),
     }
 )
-ARCHIVE_PARCEL_SCHEMA = probatio.Schema(
-    {probatio.Required(ATTR_PARCEL): probatio.All(cv.string, probatio.Length(min=1, max=100))}
+# A parcel is named by its id or its tracking number.
+PARCEL = probatio.All(cv.string, probatio.Length(min=1, max=MOST_PARCEL))
+PARCEL_SCHEMA = probatio.Schema({probatio.Required(ATTR_PARCEL): PARCEL})
+RENAME_PARCEL_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(ATTR_PARCEL): PARCEL,
+        # "" clears the name.
+        probatio.Required(ATTR_NAME): probatio.All(cv.string, probatio.Length(max=MOST_NAME)),
+    }
+)
+CHANGE_CARRIER_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(ATTR_PARCEL): PARCEL,
+        probatio.Required(ATTR_CARRIER): probatio.All(cv.string, probatio.Length(min=1, max=MOST_CARRIER)),
+        probatio.Optional(ATTR_POSTCODE): probatio.All(cv.string, probatio.Length(max=MOST_POSTCODE)),
+    }
+)
+SET_PARCEL_NOTIFICATIONS_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(ATTR_PARCEL): PARCEL,
+        probatio.Required(ATTR_NOTIFICATIONS): cv.boolean,
+    }
 )
 GET_PARCELS_SCHEMA = probatio.Schema(
     {
@@ -73,13 +109,19 @@ def _entry(hass: HomeAssistant) -> PeekConfigEntry:
     return entries[0]
 
 
-async def _ask[T](hass: HomeAssistant, entry: PeekConfigEntry, call: Awaitable[T]) -> T:
-    """Wait for a call to Peek, as an error the user can read when it fails."""
+async def _ask[T](
+    hass: HomeAssistant, entry: PeekConfigEntry, call: Awaitable[T], missing_scope: str = "missing_scope"
+) -> T:
+    """Wait for a call to Peek, as an error the user can read when it fails.
+
+    A refused token or a missing scope asks the user to sign in again; `missing_scope` names the message for the
+    latter.
+    """
     try:
         return await call
     except (PeekAuthError, PeekScopeError) as err:
         entry.async_start_reauth(hass)
-        key = "missing_scope" if isinstance(err, PeekScopeError) else "auth_failed"
+        key = missing_scope if isinstance(err, PeekScopeError) else "auth_failed"
         raise HomeAssistantError(translation_domain=DOMAIN, translation_key=key) from err
     except PeekRateLimitError as err:
         raise HomeAssistantError(translation_domain=DOMAIN, translation_key="rate_limited") from err
@@ -116,25 +158,81 @@ async def _add_parcels(call: ServiceCall) -> ServiceResponse:
     return {"parcels": parcels}
 
 
-async def _archive_parcel(call: ServiceCall) -> None:
-    """Move a parcel to the archive."""
+def _refusal(call: ServiceCall, err: PeekToolError) -> ServiceValidationError:
+    """Peek's refusal of a change, such as a parcel the account doesn't have, as the user's mistake."""
+    text = str(err)
+    if text.startswith(NO_PARCEL):
+        return ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="parcel_not_found",
+            translation_placeholders={"parcel": call.data[ATTR_PARCEL]},
+        )
+    if ATTR_CARRIER in call.data and text.startswith(NO_CARRIER):
+        return ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="carrier_not_found",
+            translation_placeholders={"carrier": call.data[ATTR_CARRIER]},
+        )
+    return ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="refused",
+        translation_placeholders={"error": text},
+    )
+
+
+async def _change(
+    call: ServiceCall, change: Callable[[PeekClient], Awaitable[str]], missing_scope: str = "missing_scope"
+) -> None:
+    """Change one parcel in Peek, then read the parcels again."""
     entry = _entry(call.hass)
     runtime = entry.runtime_data
-    named = call.data[ATTR_PARCEL]
 
-    async def archive() -> str:
+    async def ask() -> str:
         try:
-            return await runtime.client.archive_parcel(named)
+            return await change(runtime.client)
         except PeekToolError as err:
-            # Peek refuses only a parcel the account doesn't have.
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="parcel_not_found",
-                translation_placeholders={"parcel": named},
-            ) from err
+            raise _refusal(call, err) from err
 
-    await _ask(call.hass, entry, archive())
+    await _ask(call.hass, entry, ask(), missing_scope)
     await runtime.coordinator.async_request_refresh()
+
+
+async def _archive_parcel(call: ServiceCall) -> None:
+    """Move a parcel to the archive."""
+    await _change(call, lambda client: client.archive_parcel(call.data[ATTR_PARCEL]))
+
+
+async def _edit(call: ServiceCall, change: Callable[[PeekClient], Awaitable[str]]) -> None:
+    """A change under the `parcels:edit` scope, which a connection signed in before editing came lacks."""
+    await _change(call, change, "missing_edit_scope")
+
+
+async def _restore_parcel(call: ServiceCall) -> None:
+    """Bring a parcel back from the archive."""
+    await _edit(call, lambda client: client.restore_parcel(call.data[ATTR_PARCEL]))
+
+
+async def _rename_parcel(call: ServiceCall) -> None:
+    """Give a parcel a name, or clear it."""
+    await _edit(call, lambda client: client.rename_parcel(call.data[ATTR_PARCEL], call.data[ATTR_NAME]))
+
+
+async def _change_carrier(call: ServiceCall) -> None:
+    """Set the carrier that delivers a parcel."""
+    await _edit(
+        call,
+        lambda client: client.change_carrier(
+            call.data[ATTR_PARCEL], call.data[ATTR_CARRIER], call.data.get(ATTR_POSTCODE)
+        ),
+    )
+
+
+async def _set_parcel_notifications(call: ServiceCall) -> None:
+    """Turn Peek's notifications about a parcel on or off."""
+    await _edit(
+        call,
+        lambda client: client.set_parcel_notifications(call.data[ATTR_PARCEL], call.data[ATTR_NOTIFICATIONS]),
+    )
 
 
 async def _get_parcels(call: ServiceCall) -> ServiceResponse:
@@ -166,11 +264,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=ADD_PARCELS_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
     )
+    hass.services.async_register(DOMAIN, SERVICE_ARCHIVE_PARCEL, _archive_parcel, schema=PARCEL_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_RESTORE_PARCEL, _restore_parcel, schema=PARCEL_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_RENAME_PARCEL, _rename_parcel, schema=RENAME_PARCEL_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_CHANGE_CARRIER, _change_carrier, schema=CHANGE_CARRIER_SCHEMA)
     hass.services.async_register(
         DOMAIN,
-        SERVICE_ARCHIVE_PARCEL,
-        _archive_parcel,
-        schema=ARCHIVE_PARCEL_SCHEMA,
+        SERVICE_SET_PARCEL_NOTIFICATIONS,
+        _set_parcel_notifications,
+        schema=SET_PARCEL_NOTIFICATIONS_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,

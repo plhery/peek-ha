@@ -27,7 +27,7 @@ NEW_TOKEN = {
     "access_token": "synthetic-new-access-token",
     "refresh_token": "synthetic-new-refresh-token",
     "token_type": "Bearer",
-    "scope": "parcels:read parcels:write",
+    "scope": "parcels:read parcels:write parcels:edit",
     "expires_in": 3600,
 }
 
@@ -72,7 +72,7 @@ async def test_full_flow(
     assert query["response_type"] == "code"
     assert query["client_id"] == CLIENT_ID
     assert query["redirect_uri"] == MY_AUTH_CALLBACK_PATH
-    assert query["scope"] == "parcels:read parcels:write"
+    assert query["scope"] == "parcels:read parcels:write parcels:edit"
     assert query["code_challenge_method"] == "S256"
 
     aioclient_mock.post(TOKEN_URL, json=NEW_TOKEN)
@@ -156,20 +156,22 @@ async def test_reauth(
     config_entry: MockConfigEntry,
     no_setup,
 ) -> None:
-    """Signing in again replaces the token and reloads the entry."""
+    """Signing in again asks for every scope, replaces the token and reloads the entry."""
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    await _authorize(hass, result, hass_client_no_auth, "code=synthetic-code")
+    url = await _authorize(hass, result, hass_client_no_auth, "code=synthetic-code")
+    assert url.query["scope"] == "parcels:read parcels:write parcels:edit"
     aioclient_mock.post(TOKEN_URL, json=NEW_TOKEN)
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert config_entry.data["token"]["access_token"] == "synthetic-new-access-token"
+    assert config_entry.data["token"]["scope"] == "parcels:read parcels:write parcels:edit"
     assert config_entry.data["url"] == URL
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 

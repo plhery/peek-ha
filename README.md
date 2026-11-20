@@ -28,7 +28,7 @@ Sensors, a calendar, an event for each change and a card, from your [Peek](https
 - **Sensors** for the parcels on their way, arriving today, needing you, delivered today, and the next delivery day.
 - **A Deliveries calendar**, with each parcel on its expected day.
 - **An event for each change**: a parcel added, moving on, out for delivery, needing you or delivered.
-- **Actions** to add parcels from any text (an order email, say), archive one, or read the list.
+- **Actions** to add parcels from any text (an order email, say), rename one, change its carrier, turn its notifications off, archive or restore it, or read the list.
 - **Assist** can answer "what arrives today?".
 
 It needs Home Assistant 2026.10 or later and a Peek account.
@@ -111,14 +111,20 @@ Each event carries the parcel's `id`, `name`, `carrier`, `status`, `status_text`
 | Action | What it does |
 | --- | --- |
 | `peek.add_parcels` | Finds the tracking numbers in a `text` and adds each one, with an optional `name`. Returns each number's outcome. |
-| `peek.archive_parcel` | Archives a `parcel`, by id or tracking number. You can restore it in Peek. |
+| `peek.archive_parcel` | Archives a `parcel`, by id or tracking number. |
+| `peek.restore_parcel` | Brings an archived `parcel` back. |
+| `peek.rename_parcel` | Gives a `parcel` a new `name`; an empty one clears it. |
+| `peek.change_carrier` | Sets the `carrier` that delivers a `parcel`, by Peek's id for it, with the `postcode` some carriers ask for. |
+| `peek.set_parcel_notifications` | Turns Peek's `notifications` about a `parcel` on or off. |
 | `peek.get_parcels` | Returns the parcels that match a `status`, `sort`, `search` and `limit`. |
+
+Restoring, renaming, changing the carrier and turning notifications on or off need Home Assistant to be allowed to edit your parcels. If you connected Peek before version 0.2.0, the first of them asks you to sign in to Peek again, once.
 
 Fields, responses and examples: [docs/actions.md](docs/actions.md).
 
 ## Assist
 
-Once a Peek entity is exposed to Assist, Assist can list your parcels to answer "what arrives today?" or "where's my parcel from Fjord Outdoor?". It can't add or archive them. What it reads goes to the conversation agent you chose.
+Once a Peek entity is exposed to Assist, Assist can list your parcels to answer "what arrives today?" or "where's my parcel from Fjord Outdoor?". It can't add, edit or archive them. What it reads goes to the conversation agent you chose.
 
 ## Troubleshooting
 
@@ -127,6 +133,7 @@ Once a Peek entity is exposed to Assist, Assist can list your parcels to answer 
 | **Peek parcels** isn't in **Add card** | Reload the page. In the Home Assistant app, close the app and open it again. |
 | "Authentication expired for Peek" | Peek refused the connection, often because Home Assistant was disconnected in Peek. Select **Reconfigure** and sign in again. |
 | "This connection may not do this" | Reconfigure and allow Home Assistant to see and add parcels. |
+| "Home Assistant may not edit your parcels in Peek yet" | Peek was connected before version 0.2.0. Select **Reconfigure** and sign in again, once. |
 | "Too many requests to Peek" | Wait a minute and try again. |
 | Peek says it can't connect assistants to your account | Peek's connections for assistants are in beta and not open to every account yet. |
 

@@ -6,7 +6,7 @@
       },
       "reauth_confirm": {
         "title": "Reconnecte-toi à Peek",
-        "description": "Peek te demande de te reconnecter : la connexion a expiré ou a été supprimée, ou elle ne peut plus voir ou ajouter de colis."
+        "description": "Peek te demande de te reconnecter : la connexion a expiré ou a été supprimée, ou elle n’est pas encore autorisée à voir, ajouter ou modifier des colis."
       }
     },
     "abort": {
@@ -101,6 +101,9 @@
     "missing_scope": {
       "message": "Cette connexion n’y est pas autorisée. Reconnecte-toi à Peek et autorise-la à voir et ajouter des colis."
     },
+    "missing_edit_scope": {
+      "message": "Home Assistant ne peut pas encore modifier tes colis dans Peek. Reconnecte-toi une fois à Peek pour l’autoriser : choisis Reconfigurer à côté de Peek dans Paramètres › Appareils et services."
+    },
     "rate_limited": {
       "message": "Trop de requêtes vers Peek. Réessaie dans une minute."
     },
@@ -112,6 +115,12 @@
     },
     "parcel_not_found": {
       "message": "Peek n’a aucun colis {parcel}."
+    },
+    "carrier_not_found": {
+      "message": "Peek n’a aucun transporteur avec l’identifiant {carrier}."
+    },
+    "refused": {
+      "message": "Peek a refusé : {error}"
     },
     "url_changed": {
       "message": "L’adresse de Peek est maintenant {url}. Connecte-toi à Peek à cette adresse."
@@ -134,11 +143,67 @@
     },
     "archive_parcel": {
       "name": "Archiver un colis",
-      "description": "Déplace un colis dans les archives, hors de la liste des livraisons. Tu peux le restaurer dans Peek.",
+      "description": "Déplace un colis dans les archives, hors de la liste des livraisons. Tu peux le restaurer avec Restaurer un colis, ou dans Peek.",
       "fields": {
         "parcel": {
           "name": "Colis",
           "description": "L’identifiant ou le numéro de suivi du colis."
+        }
+      }
+    },
+    "restore_parcel": {
+      "name": "Restaurer un colis",
+      "description": "Ramène un colis archivé dans la liste des livraisons.",
+      "fields": {
+        "parcel": {
+          "name": "Colis",
+          "description": "L’identifiant ou le numéro de suivi du colis."
+        }
+      }
+    },
+    "rename_parcel": {
+      "name": "Renommer un colis",
+      "description": "Donne à un colis le nom sous lequel Peek le liste, comme ce qu’il contient ou la boutique d’où il vient.",
+      "fields": {
+        "parcel": {
+          "name": "Colis",
+          "description": "L’identifiant ou le numéro de suivi du colis."
+        },
+        "name": {
+          "name": "Nom",
+          "description": "Le nouveau nom, 80 caractères au plus. Vide, il efface le nom."
+        }
+      }
+    },
+    "change_carrier": {
+      "name": "Changer le transporteur d’un colis",
+      "description": "Indique le transporteur qui livre un colis, quand Peek s’est trompé, et vérifie aussitôt le colis avec lui.",
+      "fields": {
+        "parcel": {
+          "name": "Colis",
+          "description": "L’identifiant ou le numéro de suivi du colis."
+        },
+        "carrier": {
+          "name": "Transporteur",
+          "description": "L’identifiant du transporteur dans Peek, comme dhl, ups, la-poste ou dpd-de."
+        },
+        "postcode": {
+          "name": "Code postal",
+          "description": "Le code postal de livraison, pour un transporteur qui le demande. Sans lui, le colis garde le sien ; vide, il est retiré."
+        }
+      }
+    },
+    "set_parcel_notifications": {
+      "name": "Activer ou couper les notifications d’un colis",
+      "description": "Coupe ou rétablit les notifications de Peek pour un colis. Les e-mails de Peek à son sujet restent tels quels.",
+      "fields": {
+        "parcel": {
+          "name": "Colis",
+          "description": "L’identifiant ou le numéro de suivi du colis."
+        },
+        "notifications": {
+          "name": "Notifications",
+          "description": "Activé pour les notifications de Peek sur ce colis, désactivé pour n’en recevoir aucune."
         }
       }
     },

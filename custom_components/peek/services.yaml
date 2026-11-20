@@ -19,6 +19,56 @@ archive_parcel:
       selector:
         text:
 
+restore_parcel:
+  fields:
+    parcel:
+      required: true
+      example: "46523910834"
+      selector:
+        text:
+
+rename_parcel:
+  fields:
+    parcel:
+      required: true
+      example: "1Z4E7W960398127345"
+      selector:
+        text:
+    name:
+      required: true
+      example: "Hiking boots"
+      selector:
+        text:
+
+change_carrier:
+  fields:
+    parcel:
+      required: true
+      example: "01505024382917"
+      selector:
+        text:
+    carrier:
+      required: true
+      example: "dpd-de"
+      selector:
+        text:
+    postcode:
+      example: "10115"
+      selector:
+        text:
+
+set_parcel_notifications:
+  fields:
+    parcel:
+      required: true
+      example: "1Z4E7W960398127345"
+      selector:
+        text:
+    notifications:
+      required: true
+      selector:
+        boolean:
+
 get_parcels:
   fields:
     status:

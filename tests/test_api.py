@@ -158,6 +158,55 @@ async def test_add_parcels_request(client: PeekClient, aioclient_mock: AiohttpCl
     }
 
 
+@pytest.mark.parametrize(
+    ("call", "tool", "arguments"),
+    [
+        (lambda client: client.archive_parcel(BOOTS["id"]), "archive_parcel", {"parcel": BOOTS["id"]}),
+        (lambda client: client.restore_parcel("46523910834"), "restore_parcel", {"parcel": "46523910834"}),
+        (
+            lambda client: client.rename_parcel("1Z4E7W960398127345", "Trail boots"),
+            "rename_parcel",
+            {"parcel": "1Z4E7W960398127345", "name": "Trail boots"},
+        ),
+        (
+            lambda client: client.rename_parcel("1Z4E7W960398127345", ""),
+            "rename_parcel",
+            {"parcel": "1Z4E7W960398127345", "name": ""},
+        ),
+        (
+            lambda client: client.change_carrier("01505024382917", "dpd-de", "10115"),
+            "change_carrier",
+            {"parcel": "01505024382917", "carrier": "dpd-de", "postcode": "10115"},
+        ),
+        (
+            lambda client: client.change_carrier("01505024382917", "dpd-de", ""),
+            "change_carrier",
+            {"parcel": "01505024382917", "carrier": "dpd-de", "postcode": ""},
+        ),
+        (
+            lambda client: client.change_carrier("01505024382917", "dpd-de"),
+            "change_carrier",
+            {"parcel": "01505024382917", "carrier": "dpd-de"},
+        ),
+        (
+            lambda client: client.set_parcel_notifications("1Z4E7W960398127345", False),
+            "set_parcel_notifications",
+            {"parcel": "1Z4E7W960398127345", "notifications": False},
+        ),
+    ],
+)
+async def test_parcel_changes(
+    client: PeekClient, aioclient_mock: AiohttpClientMocker, call, tool: str, arguments: dict
+) -> None:
+    """Each change is its own tool, given the parcel and only what the change says; it returns the parcel's id."""
+    aioclient_mock.post(MCP_URL, json=tool_answer({"id": BOOTS["id"]}))
+    assert await call(client) == BOOTS["id"]
+    _, _, body, headers = aioclient_mock.mock_calls[0]
+    assert headers["Mcp-Name"] == tool
+    assert body["params"]["name"] == tool
+    assert body["params"]["arguments"] == arguments
+
+
 async def test_add_parcels_without_name(client: PeekClient, aioclient_mock: AiohttpClientMocker) -> None:
     """Without a name, only the text goes."""
     aioclient_mock.post(MCP_URL, json=tool_answer({"parcels": []}))

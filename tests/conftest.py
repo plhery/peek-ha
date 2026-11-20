@@ -39,7 +39,7 @@ async def zurich(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
 
 
 def token(expires_in: float = 3600) -> dict[str, Any]:
-    """A stored token."""
+    """A stored token, from a sign-in before editing came: without `parcels:edit`."""
     return {
         "access_token": "synthetic-access-token",
         "refresh_token": "synthetic-refresh-token",
