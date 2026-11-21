@@ -15,7 +15,7 @@ CLIENT_ID_PATH: Final = "/oauth/clients/home-assistant.json"
 AUTHORIZE_PATH: Final = "/oauth/authorize"
 TOKEN_PATH: Final = "/oauth/token"
 REVOKE_PATH: Final = "/oauth/revoke"
-# Reading, adding and archiving, and editing (renaming, changing the carrier, notifications, restoring). A connection
+# Reading, adding, and editing (renaming, changing the carrier, notifications, archiving, restoring). A connection
 # signed in before editing came lacks `parcels:edit`: Peek refuses its edits, and the first one asks to sign in again.
 SCOPES: Final = "parcels:read parcels:write parcels:edit"
 

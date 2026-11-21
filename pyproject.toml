@@ -1,6 +1,6 @@
 [project]
 name = "peek-home-assistant"
-version = "0.2.0"
+version = "0.2.1"
 description = "Peek's parcels in Home Assistant"
 license = "Apache-2.0"
 requires-python = ">=3.14"

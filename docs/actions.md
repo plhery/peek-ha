@@ -27,25 +27,21 @@ parcels:
 
 Send only the shipping part when you can: Peek keeps the tracking numbers and the name, nothing else. It adds at most 10 numbers a call.
 
-## `peek.archive_parcel`
+## Editing a parcel
+
+The five actions below need Home Assistant to be allowed to edit your parcels. A Peek connected before version 0.2.0 may only see and add them: the first edit then fails with "Home Assistant may not edit or archive your parcels in Peek yet" and asks you to sign in to Peek again, once (**Reconfigure** next to Peek in **Settings › Devices & services**). Everything else keeps working meanwhile.
+
+Each one names the parcel by its `id` or its tracking number, and reads Peek again once the change is made. They return nothing.
+
+### `peek.archive_parcel`
 
 Moves a parcel to the archive. `peek.restore_parcel` brings it back.
-
-| Field | |
-| --- | --- |
-| `parcel` | Required. The parcel's `id` or its tracking number. |
 
 ```yaml
 action: peek.archive_parcel
 data:
   parcel: 1Z4E7W960398127345
 ```
-
-## Editing a parcel
-
-The four actions below need Home Assistant to be allowed to edit your parcels. A Peek connected before version 0.2.0 may only see, add and archive them: the first edit then fails with "Home Assistant may not edit your parcels in Peek yet" and asks you to sign in to Peek again, once (**Reconfigure** next to Peek in **Settings › Devices & services**). Everything else keeps working meanwhile.
-
-Each one names the parcel by its `id` or its tracking number, and reads Peek again once the change is made. They return nothing.
 
 ### `peek.restore_parcel`
 

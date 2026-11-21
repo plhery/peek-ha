@@ -102,7 +102,7 @@
       "message": "This connection may not do this. Sign in to Peek again and allow it to see and add parcels."
     },
     "missing_edit_scope": {
-      "message": "Home Assistant may not edit your parcels in Peek yet. Sign in to Peek again once to allow it: select Reconfigure next to Peek in Settings › Devices & services."
+      "message": "Home Assistant may not edit or archive your parcels in Peek yet. Sign in to Peek again once to allow it: select Reconfigure next to Peek in Settings › Devices & services."
     },
     "rate_limited": {
       "message": "Too many requests to Peek. Try again in a minute."

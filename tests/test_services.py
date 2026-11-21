@@ -33,6 +33,12 @@ ADDED = [
 
 # Each edit: the action's data, the arguments Peek's tool gets, and Peek's answer.
 EDITS = [
+    (
+        "archive_parcel",
+        {"parcel": "1Z4E7W960398127345"},
+        {"parcel": "1Z4E7W960398127345"},
+        {"id": BOOTS["id"], "archived": True},
+    ),
     ("restore_parcel", {"parcel": "46523910834"}, {"parcel": "46523910834"}, {"id": LAMP["id"], "archived": False}),
     (
         "rename_parcel",
@@ -53,10 +59,10 @@ EDITS = [
         {"id": BOOTS["id"], "notifications": False, "emails": True},
     ),
 ]
-EDIT_TOOLS = {"rename_parcel", "change_carrier", "set_parcel_notifications", "restore_parcel"}
+EDIT_TOOLS = {"archive_parcel", "rename_parcel", "change_carrier", "set_parcel_notifications", "restore_parcel"}
 NO_EDIT = (
-    "This connection to Peek may not edit parcels. Connect Peek again and allow it to change their name, carrier or "
-    "notifications and restore archived ones."
+    "This connection to Peek may not edit or archive parcels. Connect Peek again and allow it to change their name, "
+    "carrier or notifications, and archive or restore them."
 )
 
 
@@ -72,7 +78,7 @@ def tool_call(mock: AiohttpClientMocker) -> tuple[str, dict[str, Any]]:
 
 
 async def signed_in_before_editing(method: str, url: Url, data: dict[str, Any]) -> AiohttpClientMockResponse:
-    """Peek's MCP server for a connection signed in before editing came: it may add and archive, not edit."""
+    """Peek's MCP server for a connection signed in before editing came: it may add, not edit or archive."""
     name = data["params"]["name"]
     if name in EDIT_TOOLS:
         reply = tool_refusal(NO_EDIT, scope=True, request_id=data["id"])
@@ -195,18 +201,6 @@ async def test_add_parcels_fails(
     assert caught.value.translation_key == key
     assert not isinstance(caught.value, ServiceValidationError)
     assert reauth_flows(hass) == reauth
-
-
-@pytest.mark.usefixtures("setup_integration")
-async def test_archive_parcel(hass: HomeAssistant, mock_parcels: AiohttpClientMocker) -> None:
-    """A parcel is archived by tracking number or id, and the parcels are read again."""
-    mock_parcels.post(MCP_URL, json=tool_answer({"id": BOOTS["id"], "archived": True}))
-    before = reads(mock_parcels)
-    await hass.services.async_call(DOMAIN, "archive_parcel", {"parcel": "1Z4E7W960398127345"}, blocking=True)
-    call = next(call for call in mock_parcels.mock_calls if str(call[1]) == MCP_URL)
-    assert call[3]["Mcp-Name"] == "archive_parcel"
-    assert call[2]["params"]["arguments"] == {"parcel": "1Z4E7W960398127345"}
-    assert reads(mock_parcels) == before + 2
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -370,7 +364,7 @@ async def test_edit_signed_in_before_editing(
     assert caught.value.translation_key == "missing_edit_scope"
     assert not isinstance(caught.value, ServiceValidationError)
     assert str(caught.value) == (
-        "Home Assistant may not edit your parcels in Peek yet. Sign in to Peek again once to allow it: "
+        "Home Assistant may not edit or archive your parcels in Peek yet. Sign in to Peek again once to allow it: "
         "select Reconfigure next to Peek in Settings › Devices & services"
     )
     assert reauth_flows(hass) == 1

@@ -197,14 +197,14 @@ async def _change(
     await runtime.coordinator.async_request_refresh()
 
 
-async def _archive_parcel(call: ServiceCall) -> None:
-    """Move a parcel to the archive."""
-    await _change(call, lambda client: client.archive_parcel(call.data[ATTR_PARCEL]))
-
-
 async def _edit(call: ServiceCall, change: Callable[[PeekClient], Awaitable[str]]) -> None:
     """A change under the `parcels:edit` scope, which a connection signed in before editing came lacks."""
     await _change(call, change, "missing_edit_scope")
+
+
+async def _archive_parcel(call: ServiceCall) -> None:
+    """Move a parcel to the archive."""
+    await _edit(call, lambda client: client.archive_parcel(call.data[ATTR_PARCEL]))
 
 
 async def _restore_parcel(call: ServiceCall) -> None:

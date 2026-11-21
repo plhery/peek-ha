@@ -102,7 +102,7 @@
       "message": "Cette connexion n’y est pas autorisée. Reconnecte-toi à Peek et autorise-la à voir et ajouter des colis."
     },
     "missing_edit_scope": {
-      "message": "Home Assistant ne peut pas encore modifier tes colis dans Peek. Reconnecte-toi une fois à Peek pour l’autoriser : choisis Reconfigurer à côté de Peek dans Paramètres › Appareils et services."
+      "message": "Home Assistant ne peut pas encore modifier ni archiver tes colis dans Peek. Reconnecte-toi une fois à Peek pour l’autoriser : choisis Reconfigurer à côté de Peek dans Paramètres › Appareils et services."
     },
     "rate_limited": {
       "message": "Trop de requêtes vers Peek. Réessaie dans une minute."

@@ -1,8 +1,8 @@
 """A small client for Peek's API, with nothing from Home Assistant in it.
 
 Reading goes through `GET /api/parcels`; every change goes through Peek's MCP server (`POST /mcp`), whose tools are the
-only way to write: `add_parcels` and `archive_parcel` under the `parcels:write` scope, and `rename_parcel`,
-`change_carrier`, `set_parcel_notifications` and `restore_parcel` under `parcels:edit`. Each call takes a fresh access
+only way to write: `add_parcels` under the `parcels:write` scope, and `rename_parcel`, `change_carrier`,
+`set_parcel_notifications`, `archive_parcel` and `restore_parcel` under `parcels:edit`. Each call takes a fresh access
 token from `token`.
 """
 
@@ -169,7 +169,7 @@ class PeekClient:
         session: aiohttp.ClientSession,
         url: str,
         token: Callable[[], Awaitable[str]],
-        version: str = "0.2.0",
+        version: str = "0.2.1",
     ) -> None:
         """Keep the session, Peek's address and where tokens come from."""
         self._session = session

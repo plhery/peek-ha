@@ -118,7 +118,7 @@ Each event carries the parcel's `id`, `name`, `carrier`, `status`, `status_text`
 | `peek.set_parcel_notifications` | Turns Peek's `notifications` about a `parcel` on or off. |
 | `peek.get_parcels` | Returns the parcels that match a `status`, `sort`, `search` and `limit`. |
 
-Restoring, renaming, changing the carrier and turning notifications on or off need Home Assistant to be allowed to edit your parcels. If you connected Peek before version 0.2.0, the first of them asks you to sign in to Peek again, once.
+Archiving, restoring, renaming, changing the carrier and turning notifications on or off need Home Assistant to be allowed to edit your parcels. If you connected Peek before version 0.2.0, the first of them asks you to sign in to Peek again, once.
 
 Fields, responses and examples: [docs/actions.md](docs/actions.md).
 
